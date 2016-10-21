@@ -61,10 +61,16 @@ class WePay(object):
             response = self.requests.post(
                 url, data=params, headers=headers,
                 timeout=self.request_timeout)
-            return response.json()
-        except:
+            
+            # in the event of 4xx or 5xx error, raise the error
             if 400 <= response.status_code <= 599:
-                raise Exception('Unknown error. Please contact support@wepay.com')
+                response.raise_for_status()
+            return response.json()
+
+        # at this point, grab the exception and return an error message
+        # this will catch the 4xx and 5xx errors and any other requests errors that may arise
+        except Exception as e:
+            raise Exception('Unknown error. Please contact support@wepay.com. Traceback:\n{0}'.format(e))
 
     def get_authorization_url(self, redirect_uri, client_id, options=None,
                               scope=None):
